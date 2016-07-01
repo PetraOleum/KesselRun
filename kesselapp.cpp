@@ -51,7 +51,7 @@ bool KesselApp::OnInit() {
 		fprintf(stderr, "Could not create renderer. SDL error: %s\n", SDL_GetError());
 		return false;
 	}
-	BlackHole =  {BLACK_HOLE_MASS, 0, 0, 0, 0, 0, {0x000000}};
+	BlackHole =  {BLACK_HOLE_MASS, 0, 0, 0, 0, 0, {0x000000}, true, false};
 	generator = std::mt19937(rd());
 	posdist = std::normal_distribution<>(
 			MAX_RADIAL_DISTANCE / 2, MAX_RADIAL_DISTANCE / 4);
@@ -60,25 +60,39 @@ bool KesselApp::OnInit() {
 	sizeDistribution = std::uniform_int_distribution<int>(1, 20);
 
 	for (int i = 0; i < NUMBER_OF_ASTEROIDS; i++) {
+		bool nocollisions = true;
 		Asteroid newast;
 		newast.radius = sizeDistribution(generator);
 		newast.mass = 10;
+		double radialdist;
 		newast.heading = randheading(generator);
 		double theta = newast.heading + M_PI / 2;
-		double radialdist;
 		do
 			radialdist = posdist(generator);
 		while (radialdist > MAX_RADIAL_DISTANCE || radialdist < MIN_RADIAL_DISTANCE);
 		newast.x = radialdist * cos(theta);
 		newast.y = radialdist * sin(theta);
+		for (int q = 0; q < i && nocollisions; q++)
+			if (collision(newast, asteroids[q]))
+				nocollisions = false;
+		// This is utterly stupid, but I can't get the obvious
+		// do-while loop to work; seems to crash the random
+		// number generator somehow. May also be to do with the
+		// union in the Asteroid struct
+		if (!nocollisions) {
+			i--;
+			continue;
+		}
 		newast.speed = sqrt((GRAVITATIONAL_CONSTANT * BLACK_HOLE_MASS) / radialdist);
 		Uint8 cVal = colourDistribution(generator);
 		newast.r = newast.g = newast.b = cVal;
 		newast.a = 0xFF;
+		newast.alive = true;
+		newast.movable = true;
 		asteroids.push_back(newast);
-//		printf("%f; %f\n", newast.x, newast.y);
+//		printf("%d: %f; %f\n", i, newast.x, newast.y);
 	}
-	printf("%f\n", GRAVITATIONAL_CONSTANT * BLACK_HOLE_MASS);
+//	printf("%f\n", GRAVITATIONAL_CONSTANT * BLACK_HOLE_MASS);
 	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
 	running = true;
 	return true;
@@ -87,6 +101,8 @@ bool KesselApp::OnInit() {
 void KesselApp::OnLoop() {
 	for (unsigned int i = 0; i < asteroids.size(); i++) {
 		Asteroid ast = asteroids[i];
+		if (!ast.alive || !ast.movable)
+			continue;
 		ast.x += ast.speed * cos(ast.heading);
 		ast.y += ast.speed * sin(ast.heading);
 		double ga = gravitationalAcceleration(BlackHole, ast);
@@ -95,6 +111,13 @@ void KesselApp::OnLoop() {
 		ast = deltaV(ast, ga, gaheading);
 		asteroids[i] = ast;
 	}
+	for (unsigned int i1 = 0; i1 < asteroids.size(); i1++) 
+		if (asteroids[i1].alive)
+			for (unsigned int i2 = i1 + 1; i2 < asteroids.size(); i2++)
+				if (asteroids[i2].alive)
+					if (collision(asteroids[i1], asteroids[i2]))
+						printf("Collision between %d and %d.\n", i1, i2);
+
 //	printf("\n");
 }
 

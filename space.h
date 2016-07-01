@@ -8,6 +8,7 @@
 #define GRAVITATIONAL_CONSTANT 0.00000000005
 
 
+
 /// @brief Struct for a particle, e.g. black hole, asteroid, etc
 struct Asteroid {
 	/// @brief Mass of the object
@@ -38,6 +39,8 @@ struct Asteroid {
 			Uint8 a;
 		};
 	};
+	bool alive;
+	bool movable;
 };
 
 /// @brief Calculate the distance between the centres of two Asteroids

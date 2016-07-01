@@ -3,7 +3,10 @@
 
 #include <cmath>
 
-#define GRAVITATIONAL_CONSTANT 0.0000000001
+#include <SDL2/SDL.h>
+
+#define GRAVITATIONAL_CONSTANT 0.00000000005
+
 
 /// @brief Struct for a particle, e.g. black hole, asteroid, etc
 struct Asteroid {
@@ -19,6 +22,22 @@ struct Asteroid {
 	double x;
 	/// @brief Y-coordinate of the object
 	double y;
+	/// @brief Hold the colour of the Asteroid
+	union {
+		/// @brief Colour as 32-bit unsigned integer
+		Uint32 RGBA;
+		/// @brief Colour as individual 8-bit unsiged integer
+		struct {
+			/// @brief Red part
+			Uint8 r;
+			/// @brief Green part
+			Uint8 g;
+			/// @brief Blue part
+			Uint8 b;
+			/// @brief Alpha part
+			Uint8 a;
+		};
+	};
 };
 
 /// @brief Calculate the distance between the centres of two Asteroids

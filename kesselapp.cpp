@@ -51,15 +51,17 @@ bool KesselApp::OnInit() {
 		fprintf(stderr, "Could not create renderer. SDL error: %s\n", SDL_GetError());
 		return false;
 	}
-	BlackHole =  {BLACK_HOLE_MASS, 0, 0, 0, 0, 0};
+	BlackHole =  {BLACK_HOLE_MASS, 0, 0, 0, 0, 0, {0x000000}};
 	generator = std::mt19937(rd());
 	posdist = std::normal_distribution<>(
 			MAX_RADIAL_DISTANCE / 2, MAX_RADIAL_DISTANCE / 4);
 	randheading = std::uniform_real_distribution<double>(0, M_PI * 2);
+	colourDistribution = std::uniform_int_distribution<Uint8>(0x10, 0xE0);
+	sizeDistribution = std::uniform_int_distribution<int>(1, 20);
 
 	for (int i = 0; i < NUMBER_OF_ASTEROIDS; i++) {
 		Asteroid newast;
-		newast.radius = 10;
+		newast.radius = sizeDistribution(generator);
 		newast.mass = 10;
 		newast.heading = randheading(generator);
 		double theta = newast.heading + M_PI / 2;
@@ -70,6 +72,9 @@ bool KesselApp::OnInit() {
 		newast.x = radialdist * cos(theta);
 		newast.y = radialdist * sin(theta);
 		newast.speed = sqrt((GRAVITATIONAL_CONSTANT * BLACK_HOLE_MASS) / radialdist);
+		Uint8 cVal = colourDistribution(generator);
+		newast.r = newast.g = newast.b = cVal;
+		newast.a = 0xFF;
 		asteroids.push_back(newast);
 //		printf("%f; %f\n", newast.x, newast.y);
 	}
@@ -94,6 +99,7 @@ void KesselApp::OnLoop() {
 }
 
 void KesselApp::OnRender() {
+	SDL_GetWindowSize(window, &winX, &winY);
 	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
 	SDL_RenderClear(renderer);
 	SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
@@ -103,7 +109,7 @@ void KesselApp::OnRender() {
 				(int)ast.x + xOffset, 
 				(int)ast.y + yOffset, 
 				(int)ast.radius, 
-				0xFF, 0xFF, 0xFF, 0xFF);
+				ast.r, ast.g, ast.b, ast.a);
 	}
 	SDL_RenderPresent(renderer);
 }
@@ -112,6 +118,9 @@ void KesselApp::OnEvent(SDL_Event* event) {
 	switch (event->type) {
 		case SDL_QUIT:
 			running = false;
+			break;
+		case SDL_KEYDOWN:
+			onKeyDown(&event->key);
 			break;
 		default:
 			break;
@@ -124,4 +133,19 @@ void KesselApp::OnCleanup() {
 	window = NULL;
 	renderer = NULL;
 	SDL_Quit();
+}
+
+void KesselApp::centreWindow() {
+	xOffset = winX / 2;
+	yOffset = winY / 2;
+}
+
+void KesselApp::onKeyDown(SDL_KeyboardEvent* keyEvent) {
+	switch (keyEvent->keysym.sym) {
+		case SDLK_c:
+			centreWindow();
+			break;
+		default:
+			break;
+	}
 }

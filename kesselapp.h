@@ -15,7 +15,7 @@
 
 #define BLACK_HOLE_MASS 100000000000000
 
-#define MAX_RADIAL_DISTANCE 1000
+#define MAX_RADIAL_DISTANCE 3000
 #define MIN_RADIAL_DISTANCE 100
 
 #define NUMBER_OF_ASTEROIDS 1000
@@ -28,6 +28,23 @@ class KesselApp {
 
 		/// @brief Is the app fullscreen
 		bool fullscreen = false;
+
+		/// @brief Whether or not the moue is down
+		bool mouseDown = false;
+
+		/// @brief Centre window on black hole
+		void centreWindow();
+
+		/// @brief Handle key-downs
+		///
+		/// @param keyEvent The KeyboardEvent
+		void onKeyDown(SDL_KeyboardEvent* keyEvent);
+
+		/// @brief Updated with window width each render
+		int winX = INIT_SCREEN_WIDTH;
+
+		/// @brief Updated with window height each render
+		int winY = INIT_SCREEN_HEIGHT;
 
 		/// @brief Holds the window
 		SDL_Window* window = NULL;
@@ -49,6 +66,12 @@ class KesselApp {
 
 		/// @brief Distribution of random numbers for distance
 		std::normal_distribution<> posdist;
+
+		/// @brief Distribution of coulour of Asteroids (greyscale)
+		std::uniform_int_distribution<Uint8> colourDistribution;
+
+		/// @brief Distribution of radiuses of Asteroids
+		std::uniform_int_distribution<int> sizeDistribution;
 
 		/// @brief Distribution of random numbers for heading
 		std::uniform_real_distribution<double> randheading;

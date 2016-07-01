@@ -7,7 +7,7 @@
 
 #define GRAVITATIONAL_CONSTANT 0.00000000005
 
-
+#define ELASTICITY 1
 
 /// @brief Struct for a particle, e.g. black hole, asteroid, etc
 struct Asteroid {
@@ -39,7 +39,9 @@ struct Asteroid {
 			Uint8 a;
 		};
 	};
+	/// @brief Whether the asteroid is "alive"
 	bool alive;
+	/// @brief Whether the asteroid is movable
 	bool movable;
 };
 
@@ -107,5 +109,34 @@ inline Asteroid deltaV(const Asteroid& ast, double speed, double heading) {
 	return na;
 }
 
+/// @brief General method for adding vectors part 1
+///
+/// @param r1 The scalar part of vector 1
+/// @param theta1 The angle part of vector 1
+/// @param r2 The scalar part of vector 2
+/// @param theta2 The angle part of vector 2
+///
+/// @return The scalar part of the sum of the vectors
+inline double addVectorsScalarPart(double r1, double theta1, double r2, double theta2) {
+	return sqrt(pow(r1, 2) + pow(r2, 2) + 2 * r1 * r2 * cos(theta2 - theta1));
+}
+
+/// @brief General method for adding vectors part 2
+///
+/// @param r1 The scalar part of vector 1
+/// @param theta1 The angle part of vector 1
+/// @param r2 The scalar part of vector 2
+/// @param theta2 The angle part of vector 2
+///
+/// @return The angle part of the sum of the vectors
+inline double addVectorsAnglePart(double r1, double theta1, double r2, double theta2) {
+	return theta1 + atan2(r2 * sin(theta2 - theta1), r1 + r2 * cos(theta2 - theta1));
+}
+
+/// @brief Handle a known collision between two Asteroids
+///
+/// @param ast1 First body
+/// @param ast2 Second body
+void handleCollision(Asteroid* ast1, Asteroid* ast2);
 
 #endif

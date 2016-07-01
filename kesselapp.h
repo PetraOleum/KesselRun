@@ -13,12 +13,14 @@
 #define INIT_SCREEN_WIDTH 500
 #define INIT_SCREEN_HEIGHT 500
 
-#define BLACK_HOLE_MASS 100000000000000
+#define BLACK_HOLE_MASS 1000000000000000
 
-#define MAX_RADIAL_DISTANCE 3000
-#define MIN_RADIAL_DISTANCE 100
+#define MAX_RADIAL_DISTANCE 5000
+#define MIN_RADIAL_DISTANCE 300
 
 #define NUMBER_OF_ASTEROIDS 1000
+
+#define MAX_SPEED 100
 
 /// @brief Application class for Kessel Run
 class KesselApp {
@@ -79,11 +81,15 @@ class KesselApp {
 		/// @brief The Black Hole
 		Asteroid BlackHole;
 
+		/// @brief The Falcon
+		Asteroid Falcon;
+
 		/// @brief The x offset of the viewing window
 		int xOffset = INIT_SCREEN_WIDTH / 2;
 
 		/// @brief The y offset of the viewing window
 		int yOffset = INIT_SCREEN_HEIGHT / 2;
+
 
 	public:
 		/// @brief Constructor

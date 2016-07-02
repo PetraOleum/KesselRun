@@ -5,6 +5,7 @@
 #include <random>
 #include <cmath>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include "space.h"
 
@@ -18,9 +19,14 @@
 #define MAX_RADIAL_DISTANCE 5000
 #define MIN_RADIAL_DISTANCE 300
 
+//#define FALCON_STARTING_RADIUS (MAX_RADIAL_DISTANCE / 2)
+#define FALCON_STARTING_RADIUS (MIN_RADIAL_DISTANCE - 10)
+
 #define NUMBER_OF_ASTEROIDS 1000
 
-#define MAX_SPEED 100
+#define MAX_SPEED 50
+
+#define FALCON_DELTA_V 0.001
 
 /// @brief Application class for Kessel Run
 class KesselApp {
@@ -53,6 +59,9 @@ class KesselApp {
 
 		/// @brief Holds the surface
 		SDL_Surface* screensurface = NULL;
+
+		/// @brief The texture for the Falcon
+		SDL_Texture* falcontexture = NULL;
 
 		/// @brief Holds the renderer
 		SDL_Renderer* renderer = NULL;

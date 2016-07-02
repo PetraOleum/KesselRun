@@ -46,13 +46,34 @@ bool KesselApp::OnInit() {
 		fprintf(stderr, "Window could not be created. SDL error: %s\n", SDL_GetError());
 		return false;
 	}
+	int imgflags = IMG_INIT_PNG;
+	if (! (IMG_Init(imgflags)) & imgflags) {
+		fprintf(stderr, "SDL_Image could not be loaded. %s\n", IMG_GetError());
+		return false;
+	}
 	screensurface = SDL_GetWindowSurface(window);
 	if ((renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)) == NULL) {
 		fprintf(stderr, "Could not create renderer. SDL error: %s\n", SDL_GetError());
 		return false;
 	}
+	SDL_Surface* loadsurface = IMG_Load("Falcon.png");
+	if (loadsurface == NULL) {
+		fprintf(stderr, "Could not load Falcon.png. %s\n", IMG_GetError());
+		return false;
+	}
+	falcontexture = SDL_CreateTextureFromSurface(renderer, loadsurface);
+	if (falcontexture == NULL) {
+		fprintf(stderr, "Could not convert texture. %s\n", SDL_GetError());
+		return false;
+	}
 	BlackHole =  {BLACK_HOLE_MASS, 0, 0, 100, 0, 0, {0x000000}, true, false};
-	Falcon = {10, sqrt((GRAVITATIONAL_CONSTANT * BLACK_HOLE_MASS) / (MAX_RADIAL_DISTANCE / 2)), 0, 10, MAX_RADIAL_DISTANCE / 2, 0, {0x0}, true, true};
+	Falcon = {10, 
+		sqrt((GRAVITATIONAL_CONSTANT * BLACK_HOLE_MASS) / FALCON_STARTING_RADIUS), 
+		-M_PI_2, 
+		10, 
+		FALCON_STARTING_RADIUS, 0, 
+		{0x0}, 
+		true, true};
 	Falcon.r = 0x00;
 	Falcon.g = 0xFF;
 	Falcon.b = 0x00;
@@ -122,6 +143,7 @@ void KesselApp::OnLoop() {
 	if (Falcon.speed > MAX_SPEED) Falcon.speed = MAX_SPEED;
 	Falcon.x += Falcon.speed * cos(Falcon.heading);
 	Falcon.y += Falcon.speed * sin(Falcon.heading);
+	printf("%f, %f\t", fga, fgaheading);
 	Falcon = deltaV(Falcon, fga, fgaheading);
 
 	
@@ -129,11 +151,14 @@ void KesselApp::OnLoop() {
 		if (asteroids[i1].alive) {
 			if (collision(asteroids[i1], BlackHole))
 				asteroids[i1].alive = false;
-			else
-			for (unsigned int i2 = i1 + 1; i2 < asteroids.size(); i2++)
-				if (asteroids[i2].alive)
-					if (collision(asteroids[i1], asteroids[i2]))
-						handleCollision(&asteroids[i1], &asteroids[i2]);
+			else {
+				for (unsigned int i2 = i1 + 1; i2 < asteroids.size(); i2++)
+					if (asteroids[i2].alive)
+						if (collision(asteroids[i1], asteroids[i2]))
+							handleCollision(&asteroids[i1], &asteroids[i2]);
+				if (collision(asteroids[i1], Falcon))
+					handleCollision(&asteroids[i1], &Falcon);
+			}
 		}
 
 //	printf("\n");
@@ -161,11 +186,15 @@ void KesselApp::OnRender() {
 				(int)ast.radius, 
 				ast.RGBA);
 	}
-	filledCircleColor(renderer,
-			(int)Falcon.x + xOffset,
-			(int)Falcon.y + yOffset,
-			(int)Falcon.radius,
-			Falcon.RGBA);
+//	filledCircleColor(renderer,
+//			(int)Falcon.x + xOffset,
+//			(int)Falcon.y + yOffset,
+//			(int)Falcon.radius,
+//			Falcon.RGBA);
+//
+	SDL_Rect falcon_rect = {((int)Falcon.x + xOffset) - (int)Falcon.radius, ((int)Falcon.y + yOffset) - (int)Falcon.radius, (int)Falcon.radius * 2, (int)Falcon.radius * 2};
+	SDL_RenderCopyEx(renderer, falcontexture, NULL, &falcon_rect, (Falcon.heading + M_PI_2) / M_PI * 180, NULL, SDL_FLIP_NONE);
+	printf("%f; %f\t(%f, %f)\n", Falcon.speed, Falcon.heading, Falcon.x, Falcon.y);
 	SDL_RenderPresent(renderer);
 }
 
@@ -183,10 +212,12 @@ void KesselApp::OnEvent(SDL_Event* event) {
 }
 
 void KesselApp::OnCleanup() {
+	SDL_DestroyTexture(falcontexture);
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);
 	window = NULL;
 	renderer = NULL;
+	IMG_Quit();
 	SDL_Quit();
 }
 
@@ -203,6 +234,38 @@ void KesselApp::onKeyDown(SDL_KeyboardEvent* keyEvent) {
 	switch (keyEvent->keysym.sym) {
 		case SDLK_c:
 			centreWindow();
+			break;
+		case SDLK_UP:
+			{
+				double oang = Falcon.heading;
+				double ospd = Falcon.speed;
+				Falcon.heading = addVectorsAnglePart(ospd, oang, FALCON_DELTA_V, oang);
+				Falcon.speed = addVectorsAnglePart(ospd, oang, FALCON_DELTA_V, oang);
+			}
+			break;
+		case SDLK_RIGHT:
+			{
+				double oang = Falcon.heading;
+				double ospd = Falcon.speed;
+				Falcon.heading = addVectorsAnglePart(ospd, oang, FALCON_DELTA_V, oang + M_PI_2);
+				Falcon.speed = addVectorsAnglePart(ospd, oang, FALCON_DELTA_V, oang + M_PI_2);
+			}
+			break;
+		case SDLK_LEFT:
+			{
+				double oang = Falcon.heading;
+				double ospd = Falcon.speed;
+				Falcon.heading = addVectorsAnglePart(ospd, oang, FALCON_DELTA_V, oang - M_PI_2);
+				Falcon.speed = addVectorsAnglePart(ospd, oang, FALCON_DELTA_V, oang - M_PI_2);
+			}
+			break;
+		case SDLK_DOWN:
+			{
+				double oang = Falcon.heading;
+				double ospd = Falcon.speed;
+				Falcon.heading = addVectorsAnglePart(ospd, oang, 1, oang - M_PI);
+				Falcon.speed = addVectorsAnglePart(ospd, oang, 1, oang - M_PI);
+			}
 			break;
 		default:
 			break;

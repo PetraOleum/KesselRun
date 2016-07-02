@@ -12,7 +12,7 @@ void handleCollision(Asteroid* ast1, Asteroid* ast2) {
 	double relangle = addVectorsAnglePart(
 			a1s, a1h, 
 			a2s, a2h);
-	double impulse = relspeed / (1/ast1->mass + 1/ast1->mass);
+	double impulse = relspeed / (1/ast1->mass + 1/ast2->mass);
 	double a1dv = ELASTICITY * impulse / ast1->mass;
 	double a2dv = ELASTICITY * -impulse / ast2->mass;
 	ast1->speed = addVectorsScalarPart(a1s, a1h, a1dv, relangle);

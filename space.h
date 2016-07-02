@@ -7,7 +7,7 @@
 
 #define GRAVITATIONAL_CONSTANT 0.00000000005
 
-#define ELASTICITY 1
+#define ELASTICITY 0.1
 
 /// @brief Struct for a particle, e.g. black hole, asteroid, etc
 struct Asteroid {
